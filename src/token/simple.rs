@@ -230,12 +230,8 @@ impl<'a, R> TokenReader for TreeTokenReader<'a, R> where R: Read + Seek {
         debug!("TreeTokenReader: bool");
         let mut buf : [u8; 1] = unsafe { std::mem::uninitialized() };
         self.read(&mut buf)?;
-        match buf[0] {
-            0 => Ok(Some(false)),
-            1 => Ok(Some(true)),
-            2 => Ok(None),
-            _ => Err(TokenReaderError::InvalidValue)
-        }
+        bytes::bool::bool_of_bytes(&buf)
+            .map_err(|_| TokenReaderError::InvalidValue)
     }
 
     fn float(&mut self) -> Result<Option<f64>, Self::Error> {
@@ -376,8 +372,9 @@ impl TokenWriter for TreeTokenWriter {
     type Tree = Rc<Vec<u8>>;
     type Error = TokenWriterError;
 
-    fn done(&mut self) {
+    fn done(&mut self) -> Result<(), Self::Error> {
         // Nothing to do.
+        Ok(())
     }
 
     fn float(&mut self, data: Option<f64>) -> Result<Self::Tree, Self::Error> {
@@ -387,12 +384,7 @@ impl TokenWriter for TreeTokenWriter {
 
     fn bool(&mut self, data: Option<bool>) -> Result<Self::Tree, Self::Error> {
         debug!("TreeTokenWriter: bool");
-        let buf = match data {
-            None => [2],
-            Some(true) => [1],
-            Some(false) => [0]
-        };
-        let result = buf.iter().cloned().collect();
+        let result = bytes::bool::bytes_of_bool(data).iter().cloned().collect();
         Ok(self.register(result))
     }
 
@@ -405,7 +397,7 @@ impl TokenWriter for TreeTokenWriter {
             None => EMPTY_STRING.len(),
             Some(ref x) => x.len()
         } as u32;
-        let buf_len : [u8; 4] = unsafe { std::mem::transmute(byte_len) };
+        let buf_len : [u8; 4] = unsafe { std::mem::transmute(byte_len) }; // FIXME: Make this little-endian
         assert!(std::mem::size_of_val(&buf_len) == std::mem::size_of_val(&byte_len));
 
 

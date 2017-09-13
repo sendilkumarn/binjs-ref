@@ -77,7 +77,7 @@ pub trait TokenWriter where Self::Error: Debug {
     /// of this `TokenWriter`.
     type Error;
 
-    fn done(&mut self);
+    fn done(&mut self) -> Result<(), Self::Error>;
 
     /// Write a tagged tuple.
     ///
