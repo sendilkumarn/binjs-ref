@@ -296,6 +296,21 @@ impl FromShift {
                 // - `remove` is the `VariableDeclarationStatement`
                 // - `object` is the `VariableDeclaration`
             }
+            Some("LiteralBooleanExpression") => {
+                // Rewrite
+                //
+                // LiteralBooleanExpression {
+                //      value: true | false
+                // }
+                //
+                // into
+                //
+                // LiteralTrueExpression | LiteralFalseExpression { }
+                object["type"] = match object.remove("value") {
+                  Some(JSON::Boolean(true)) => json::from("LiteralTrueExpression"),
+                  _ => json::from("LiteralFalseExpression")
+                };
+            }
             _ => { /* No change */ }
         }
     }
@@ -402,7 +417,7 @@ impl MutASTVisitor for ToShift {
                 //      VariableDeclarator {
                 //        init: null,
                 //        binding
-                //      } 
+                //      }
                 //    }]
                 // }
                 object["type"] = json::from("VariableDeclaration");
@@ -414,6 +429,32 @@ impl MutASTVisitor for ToShift {
                         "binding" => binding
                     }
                 ];
+            }
+            (_, "LiteralTrueExpression", &mut JSON::Object(ref mut object)) => {
+                // Rewrite
+                //
+                // LiteralTrueExpression { }
+                //
+                // into
+                //
+                // LiteralBooleanExpression {
+                //    value
+                // }
+                object["type"] = json::from("LiteralBooleanExpression");
+                object["value"] = JSON::Boolean(true);
+            }
+            (_, "LiteralFalseExpression", &mut JSON::Object(ref mut object)) => {
+                // Rewrite
+                //
+                // LiteralFalseExpression { }
+                //
+                // into
+                //
+                // LiteralBooleanExpression {
+                //    value
+                // }
+                object["type"] = json::from("LiteralBooleanExpression");
+                object["value"] = JSON::Boolean(false);
             }
             _ => {
                 // Nothing to do.
