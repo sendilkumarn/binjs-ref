@@ -137,7 +137,8 @@ typedef (Block or
          WithStatement)
         Statement;
 
-typedef (LiteralBooleanExpression or
+typedef (LiteralTrueExpression or
+         LiteralFalseExpression or
          LiteralInfinityExpression or
          LiteralNullExpression or
          LiteralNumericExpression or
@@ -467,10 +468,11 @@ interface LiteralPropertyName : Node {
 
 // literals
 
-// `BooleanLiteral`
-interface LiteralBooleanExpression : Node {
-  attribute boolean value;
-};
+// `TrueLiteral`
+interface LiteralTrueExpression : Node { };
+
+// `FalseLiteral`
+interface LiteralFalseExpression : Node { };
 
 // A `NumericLiteral` for which the Number value of its MV is positive infinity.
 interface LiteralInfinityExpression : Node { };
